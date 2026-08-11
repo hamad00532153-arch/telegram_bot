@@ -43,6 +43,6 @@ def check_news():
         
         # ئەگەر هەواڵەکە وێنەی هەبوو، وێنە و دەقەکە بەیەکەوە پۆست دەکات (خاڵی ٤)
         if image_url:
-            bot.send_photo(chat_id=CHANNEL_USERNAME, photo=image_url, caption=message, parse_mode="Markdown")
+            bot.send_photo(chat_id=CHANNEL_USER-NAME, photo=image_url, caption=message, parse_mode="Markdown")
         else:
-            bot.send_message(chat_id=CHANNEL_USERNAME, text=message, parse_mode="Markdown")
+            bot.send_message(chat_id=CHANNEL_USER-NAME, text=message, parse_mode="Markdown")
