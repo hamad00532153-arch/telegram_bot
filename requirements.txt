@@ -1,5 +1,4 @@
-Flask
+flask
 feedparser
-google-genai
 python-telegram-bot
-gunicorn
+groq
