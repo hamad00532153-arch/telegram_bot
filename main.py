@@ -36,10 +36,11 @@ def health():
 def run_web():
     port = int(os.environ.get("PORT", 10000))
 
-    app.run(
+    app.run()
         host="0.0.0.0",
         port=port,
         use_reloader=False
+    )
 FEED_URLS = [
     "https://www.goal.com/feeds/news",
     "https://arabic.rt.com/rss/sport/",
