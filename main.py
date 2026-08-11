@@ -1,7 +1,7 @@
 # ============================================================
 # HAMAD SPORT NEWS BOT
 # Football News -> Kurdish -> Telegram
-# Render + Flask + Gemini + RSS
+# Render + Flask + Groq + RSS
 # ============================================================
 
 import os
@@ -12,7 +12,7 @@ import threading
 
 import feedparser
 from flask import Flask
-from google import genai
+from groq import Groq
 from telegram import Bot
 
 
@@ -37,10 +37,11 @@ def run_web():
     port = int(os.environ.get("PORT", 10000))
 
     app.run(
-    host="0.0.0.0",
-    port=port,
-    use_reloader=False
+        host="0.0.0.0",
+        port=port,
+        use_reloader=False
     )
+
 FEED_URLS = [
     "https://www.goal.com/feeds/news",
     "https://arabic.rt.com/rss/sport/",
@@ -50,20 +51,11 @@ FEED_URLS = [
 # SETTINGS
 # ============================================================
 
-
-
-# ============================================================
-# SETTINGS
-# ============================================================
-
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ناوی کەناڵەکەت
 CHANNEL_USERNAME = "@Hamadsport_bot"
-
-# RSS
-#FEED_URL = "https://www.goal.com/feeds/news"
 
 # فایلەکە بۆ هەواڵە پۆستکراوەکان
 SEEN_FILE = "seen_news.json"
@@ -71,8 +63,8 @@ SEEN_FILE = "seen_news.json"
 # هەر 5 خولەک
 CHECK_INTERVAL = 300
 
-# Gemini
-GEMINI_MODEL = "gemini-3.6-flash"
+# Groq Model
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
 # ============================================================
@@ -96,9 +88,9 @@ if not TELEGRAM_TOKEN:
         "❌ TELEGRAM_TOKEN لە Environment Variables دانەنراوە."
     )
 
-if not GEMINI_API_KEY:
+if not GROQ_API_KEY:
     raise ValueError(
-        "❌ GEMINI_API_KEY لە Environment Variables دانەنراوە."
+        "❌ GROQ_API_KEY لە Environment Variables دانەنراوە."
     )
 
 
@@ -110,8 +102,8 @@ bot = Bot(
     token=TELEGRAM_TOKEN
 )
 
-gemini = genai.Client(
-    api_key=GEMINI_API_KEY
+groq_client = Groq(
+    api_key=GROQ_API_KEY
 )
 
 
@@ -246,7 +238,7 @@ def get_image_url(entry):
 
 
 # ============================================================
-# GEMINI
+# GROQ AI TRANSLATION
 # ============================================================
 
 def translate_and_format(title, summary):
@@ -291,25 +283,27 @@ Summary:
 
     try:
 
-        response = gemini.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt
+        response = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
         )
 
-        if not response or not response.text:
+        if not response or not response.choices:
 
             logger.error(
-                "❌ Gemini هیچ وەڵامێکی نەدا."
+                "❌ Groq هیچ وەڵامێکی نەدا."
             )
 
             return None
 
-        return response.text.strip()
+        return response.choices[0].message.content.strip()
 
     except Exception as error:
 
         logger.error(
-            f"❌ Gemini error: {error}"
+            f"❌ Groq error: {error}"
         )
 
         return None
@@ -575,6 +569,7 @@ async def process_news():
             )
             await asyncio.sleep(10)
 
+
 # ============================================================
 # TEST TELEGRAM
 # ============================================================
@@ -623,7 +618,7 @@ async def main():
     )
 
     logger.info(
-        f"🌐 RSS: {FEED_URLS[0]}"
+        f"🌐 RSS Sources Loaded"
     )
 
     logger.info(
