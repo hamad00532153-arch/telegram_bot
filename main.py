@@ -613,7 +613,7 @@ async def main():
     )
 
     logger.info(
-        f"🌐 RSS: {FEED_URL}"
+        f"🌐 RSS: {FEED_URLS[0]}"
     )
 
     logger.info(
