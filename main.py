@@ -55,7 +55,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ناوی کەناڵەکەت
-CHANNEL_USERNAME = "@Hamadsport_bot"
+CHANNEL_USERNAME = "@hamadsport1"
 
 # فایلەکە بۆ هەواڵە پۆستکراوەکان
 SEEN_FILE = "seen_news.json"
