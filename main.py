@@ -525,7 +525,6 @@ async def process_news():
     if not news_list:
         return
 
-
     new_news = []
 
     for news in news_list:
@@ -533,7 +532,6 @@ async def process_news():
         if news["id"] not in seen:
 
             new_news.append(news)
-
 
     if not new_news:
 
@@ -543,11 +541,9 @@ async def process_news():
 
         return
 
-
     logger.info(
-        f"🔥 {len(new_news)} هەواڵی نوێ دۆزرایەوە."
+        f"🔥 {len(new_news)} هەواڵی نوێ دۆزرایەوە. دەستپێکردنی پۆستکردن..."
     )
-
 
     # کۆنترین -> نوێترین
     for news in reversed(new_news):
@@ -568,7 +564,8 @@ async def process_news():
                 "💾 هەواڵەکە وەک پۆستکراو تۆمار کرا."
             )
 
-            await asyncio.sleep(5)
+            # چاوەڕوانکردنی ١٢٠ چرکە (٢ دەقە) بۆ هەواڵی داهاتوو
+            await asyncio.sleep(120)
 
         else:
 
@@ -576,7 +573,7 @@ async def process_news():
                 "⚠️ هەواڵەکە نەنێردرا؛ "
                 "دواتر هەوڵی دووبارە دەدرێت."
             )
-
+            await asyncio.sleep(10)
 
 # ============================================================
 # TEST TELEGRAM
