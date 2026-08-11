@@ -1,3 +1,5 @@
-google-genai
+Flask
 feedparser
+google-genai
 python-telegram-bot
+gunicorn
