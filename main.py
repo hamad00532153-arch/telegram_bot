@@ -4,7 +4,7 @@ import feedparser
 import google.generativeai as genai
 from telegram import Bot
 
-‏TELEGRAM_TOKEN = "8895214469:AAG9_cIFsGD0-ZrNDyOzsZdBG6J8A_T7amQ"
+TELEGRAM_TOKEN = "8895214469:AAG9_cIFsGD0-ZrNDyOzsZdBG6J8A_T7amQ"
 GEMINI_API_KEY = "AQ.Ab8RN6JxTa4Yv9UjpMgjmfBWPSr-JSVk7h55_QluMGKUvBB2dyg"
 CHANNEL_ID = "@Hamadsport_bot"
 
