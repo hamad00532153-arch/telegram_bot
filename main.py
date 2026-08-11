@@ -327,64 +327,77 @@ def get_news():
             "🔎 پشکنینی RSS بۆ هەواڵی نوێ..."
         )
 
-        feed = feedparser.parse(
-            FEED_URL
-        )
+        news_list = []
 
-        if not feed.entries:
+        for feed_url in FEED_URLS:
+
+            try:
+
+                feed = feedparser.parse(
+                    feed_url
+                )
+
+                if not feed.entries:
+                    continue
+
+                for entry in feed.entries:
+
+                    title = entry.get(
+                        "title",
+                        ""
+                    ).strip()
+
+                    summary = entry.get(
+                        "summary",
+                        ""
+                    ).strip()
+
+                    link = entry.get(
+                        "link",
+                        ""
+                    ).strip()
+
+                    news_id = entry.get(
+                        "id",
+                        ""
+                    ).strip()
+
+                    if not news_id:
+                        news_id = link
+
+                    if not news_id:
+                        news_id = title
+
+                    image = get_image_url(
+                        entry
+                    )
+
+                    if not title:
+                        continue
+
+                    news_list.append(
+                        {
+                            "id": news_id,
+                            "title": title,
+                            "summary": summary,
+                            "link": link,
+                            "image": image
+                        }
+                    )
+
+            except Exception as e:
+
+                logger.error(
+                    f"❌ RSS error with {feed_url}: {e}"
+                )
+
+        if not news_list:
 
             logger.warning(
-                "⚠️ هیچ هەواڵێک نەدۆزرایەوە."
+                "⚠️ هیچ هەواڵێک لە سەرچاوەکان نەدۆزرایەوە."
             )
 
             return []
-
-        news_list = []
-
-        for entry in feed.entries:
-
-            title = entry.get(
-                "title",
-                ""
-            ).strip()
-
-            summary = entry.get(
-                "summary",
-                ""
-            ).strip()
-
-            link = entry.get(
-                "link",
-                ""
-            ).strip()
-
-            news_id = entry.get(
-                "id",
-                ""
-            ).strip()
-
-            if not news_id:
-                news_id = link
-
-            if not news_id:
-                news_id = title
-
-            image = get_image_url(
-                entry
-            )
-
-            if not title:
-                continue
-
-            news_list.append(
-                {
-                    "id": news_id,
-                    "title": title,
-                    "summary": summary,
-                    "link": link,
-                    "image": image
-                }
-            )
 
         return news_list
 
