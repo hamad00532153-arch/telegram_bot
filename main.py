@@ -57,10 +57,10 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 # ناوی کەناڵەکەت
 CHANNEL_USERNAME = "@hamadsport1"
 
-# فایلەکە بۆ هەواڵە پۆستکراوەکان
+# فایلەکە بۆ هەواڵە پۆستکراوەکان (بۆ ئەوەی دووبارە نەبێتەوە)
 SEEN_FILE = "seen_news.json"
 
-# هەر 5 خولەک
+# هەر 5 خولەک پشکنین
 CHECK_INTERVAL = 300
 
 # Groq Model
@@ -108,22 +108,19 @@ groq_client = Groq(
 
 
 # ============================================================
-# LOAD SEEN NEWS
+# LOAD SEEN NEWS (بۆ ڕێگریکردن لە هەواڵی دووبارە)
 # ============================================================
 
 def load_seen_news():
-
     if not os.path.exists(SEEN_FILE):
         return set()
 
     try:
-
         with open(
             SEEN_FILE,
             "r",
             encoding="utf-8"
         ) as file:
-
             data = json.load(file)
 
         if isinstance(data, list):
@@ -132,11 +129,9 @@ def load_seen_news():
         return set()
 
     except Exception as error:
-
         logger.error(
             f"❌ هەڵە لە خوێندنەوەی seen_news: {error}"
         )
-
         return set()
 
 
@@ -145,10 +140,8 @@ def load_seen_news():
 # ============================================================
 
 def save_seen_news(seen):
-
     try:
-
-        # تەنها 500 هەواڵی کۆتایی
+        # تەنها 500 هەواڵی کۆتایی پاشەکەوت دەکات
         data = list(seen)[-500:]
 
         with open(
@@ -156,7 +149,6 @@ def save_seen_news(seen):
             "w",
             encoding="utf-8"
         ) as file:
-
             json.dump(
                 data,
                 file,
@@ -165,7 +157,6 @@ def save_seen_news(seen):
             )
 
     except Exception as error:
-
         logger.error(
             f"❌ هەڵە لە پاشەکەوتکردنی هەواڵەکان: {error}"
         )
@@ -177,108 +168,63 @@ def save_seen_news(seen):
 
 def get_image_url(entry):
 
-    # media_content
-    media_content = entry.get(
-        "media_content",
-        []
-    )
-
+    media_content = entry.get("media_content", [])
     for media in media_content:
-
         url = media.get("url")
-
         if url:
             return url
 
-
-    # media_thumbnail
-    media_thumbnail = entry.get(
-        "media_thumbnail",
-        []
-    )
-
+    media_thumbnail = entry.get("media_thumbnail", [])
     for media in media_thumbnail:
-
         url = media.get("url")
-
         if url:
             return url
 
-
-    # links
-    links = entry.get(
-        "links",
-        []
-    )
-
+    links = entry.get("links", [])
     for link in links:
-
         href = link.get("href")
         link_type = link.get("type", "")
-
         if href and link_type.startswith("image/"):
             return href
 
-
-    # enclosures
-    enclosures = entry.get(
-        "enclosures",
-        []
-    )
-
+    enclosures = entry.get("enclosures", [])
     for enclosure in enclosures:
-
         url = enclosure.get("href")
-
         if url:
             return url
-
 
     return None
 
 
 # ============================================================
-# GROQ AI TRANSLATION
+# GROQ AI TRANSLATION (کوردییەکی پاراو و ڕەسەن)
 # ============================================================
 
 def translate_and_format(title, summary):
 
     prompt = f"""
-تۆ نووسەرێکی پڕۆفیشنەڵی هەواڵی وەرزشییت.
-
-ئەم هەواڵەی خوارەوە وەرگێڕە بۆ زمانی کوردیی سۆرانی
-و بۆ پۆستی Telegram بە شێوەیەکی پڕۆفیشنەڵ ئامادەی بکە.
+تۆ وەرگێڕێکی پڕۆفیشنەڵی شارەزای زمان و هەواڵی وەرزشیی.
+ئەم هەواڵەی خوارەوە وەرگێڕە بۆ زمانی کوردیی سۆرانیی زۆر ڕوان، پاک و ستاندارد.
 
 مەرجەکان:
-
-1. مانای ڕاستەقینەی هەواڵەکە بپارێزە.
-2. هیچ زانیارییەکی خۆت زیاد مەکە.
-3. هەواڵەکە کورت و خۆشخوێن بێت.
-4. سەردێڕێکی سەرنجڕاکێش بنووسە.
-5. ناوی یاریزان و یانەکان بە دروستی بپارێزە.
-6. ژمارە و بەروارەکان بە دروستی بپارێزە.
-7. هەواڵەکە 2 تا 5 پاراگراف بێت.
-8. هیچ هاشتاکێک زیاد مەکە.
-9. هیچ لینکێک لە ناو دەقی هەواڵەکەدا مەخە.
-10. تەنها زمانی کوردی بەکاربهێنە جگە لە ناوی یاریزان و یانەکان.
-11. دەقەکە سروشتی بێت، نەک وەرگێڕانی وشە بە وشە.
-12. هیچ وشەیەک وەک "بەپێی ئەم دەقە" یان "وەرگێڕان" مەنووسە.
+1. دەقەکە بە شێوازێکی رۆژنامەوانیی کوردیی ڕەسەن بنووسە، نەک وەرگێڕانی ڕووکەش و وشە بە وشە.
+2. پیت و ڕێنووسی کوردی بە تەواوی بپارێزە (بۆ نموونە ناوی وڵات و کەسەکان بە دروستی بنووسە وەک: جەزائیر، نەک تێکدانی پیتەکان).
+3. سەردێڕێکی سەرنجڕاکێش و کورت دانە.
+4. هەواڵەکە ٢ تا ٤ پاراگراف بێت.
+5. هیچ لینکێک و هاشتاگێک مەکە.
+6. هیچ دەستەواژەیەک وەک "وەرگێڕان" یان "بەپێی ئەم دەقە" بەکار مەهێنە.
 
 شێوازی دەرچوون:
 
 ⚽ سەردێڕ:
-[سەردێڕ]
+[سەردێڕ بە کوردییەکی خۆشخوێن]
 
 📰 هەواڵ:
-[دەقی هەواڵ]
+[دەقی هەواڵ بە کوردییەکی پاراو]
 
 هەواڵی سەرچاوە:
-
-Title:
-{title}
-
-Summary:
-{summary}
+Title: {title}
+Summary: {summary}
 """
 
     try:
@@ -291,21 +237,13 @@ Summary:
         )
 
         if not response or not response.choices:
-
-            logger.error(
-                "❌ Groq هیچ وەڵامێکی نەدا."
-            )
-
+            logger.error("❌ Groq هیچ وەڵامێکی نەدا.")
             return None
 
         return response.choices[0].message.content.strip()
 
     except Exception as error:
-
-        logger.error(
-            f"❌ Groq error: {error}"
-        )
-
+        logger.error(f"❌ Groq error: {error}")
         return None
 
 
@@ -316,45 +254,23 @@ Summary:
 def get_news():
 
     try:
-
-        logger.info(
-            "🔎 پشکنینی RSS بۆ هەواڵی نوێ..."
-        )
-
+        logger.info("🔎 پشکنینی RSS بۆ هەواڵی نوێ...")
         news_list = []
 
         for feed_url in FEED_URLS:
 
             try:
-
-                feed = feedparser.parse(
-                    feed_url
-                )
+                feed = feedparser.parse(feed_url)
 
                 if not feed.entries:
                     continue
 
                 for entry in feed.entries:
 
-                    title = entry.get(
-                        "title",
-                        ""
-                    ).strip()
-
-                    summary = entry.get(
-                        "summary",
-                        ""
-                    ).strip()
-
-                    link = entry.get(
-                        "link",
-                        ""
-                    ).strip()
-
-                    news_id = entry.get(
-                        "id",
-                        ""
-                    ).strip()
+                    title = entry.get("title", "").strip()
+                    summary = entry.get("summary", "").strip()
+                    link = entry.get("link", "").strip()
+                    news_id = entry.get("id", "").strip()
 
                     if not news_id:
                         news_id = link
@@ -362,9 +278,7 @@ def get_news():
                     if not news_id:
                         news_id = title
 
-                    image = get_image_url(
-                        entry
-                    )
+                    image = get_image_url(entry)
 
                     if not title:
                         continue
@@ -380,39 +294,22 @@ def get_news():
                     )
 
             except Exception as e:
-
-                logger.error(
-                    f"❌ RSS error with {feed_url}: {e}"
-                )
-
-        if not news_list:
-
-            logger.warning(
-                "⚠️ هیچ هەواڵێک لە سەرچاوەکان نەدۆزرایەوە."
-            )
-
-            return []
+                logger.error(f"❌ RSS error with {feed_url}: {e}")
 
         return news_list
 
     except Exception as error:
-
-        logger.error(
-            f"❌ RSS error: {error}"
-        )
-
+        logger.error(f"❌ RSS error: {error}")
         return []
 
 
 # ============================================================
-# SEND NEWS
+# SEND NEWS (بەبێ لینک، تەنها ناوی سەرچاوە)
 # ============================================================
 
 async def send_news(news):
 
-    logger.info(
-        f"📰 ئامادەکردنی: {news['title']}"
-    )
+    logger.info(f"📰 ئامادەکردنی: {news['title']}")
 
     translated = translate_and_format(
         news["title"],
@@ -420,38 +317,27 @@ async def send_news(news):
     )
 
     if not translated:
-
-        logger.error(
-            "❌ وەرگێڕان سەرکەوتوو نەبوو."
-        )
-
+        logger.error("❌ وەرگێڕان سەرکەوتوو نەبوو.")
         return False
 
-
-    source_link = news["link"]
+    # دیاریکردنی ناوی سەرچاوە لە جیاتی لینکی درێژ
+    source_name = "Goal.com"
+    if "rt.com" in news["link"]:
+        source_name = "RT Arabic"
 
     message = (
         f"{translated}\n\n"
-        f"🔗 سەرچاوە:\n"
-        f"{source_link}"
+        f"🔗 سەرچاوە: {source_name}"
     )
 
-
-    # ========================================================
     # PHOTO
-    # ========================================================
-
     if news["image"]:
-
         try:
-
             caption = message
-
             if len(caption) > 1024:
-
                 caption = (
                     translated[:850]
-                    + f"\n\n🔗 سەرچاوە:\n{source_link}"
+                    + f"\n\n🔗 سەرچاوە: {source_name}"
                 )
 
             await bot.send_photo(
@@ -459,85 +345,52 @@ async def send_news(news):
                 photo=news["image"],
                 caption=caption
             )
-
-            logger.info(
-                "✅ وێنە + هەواڵ نێردرا."
-            )
-
+            logger.info("✅ وێنە + هەواڵ نێردرا.")
             return True
 
         except Exception as error:
+            logger.warning(f"⚠️ ناردنی وێنە سەرکەوتوو نەبوو: {error}")
 
-            logger.warning(
-                f"⚠️ ناردنی وێنە سەرکەوتوو نەبوو: {error}"
-            )
-
-
-    # ========================================================
     # TEXT
-    # ========================================================
-
     try:
-
         if len(message) > 4096:
-
             message = (
                 translated[:3800]
-                + f"\n\n🔗 سەرچاوە:\n{source_link}"
+                + f"\n\n🔗 سەرچاوە: {source_name}"
             )
 
         await bot.send_message(
             chat_id=CHANNEL_USERNAME,
             text=message
         )
-
-        logger.info(
-            "✅ هەواڵ بەبێ وێنە نێردرا."
-        )
-
+        logger.info("✅ هەواڵ بەبێ وێنە نێردرا.")
         return True
 
     except Exception as error:
-
-        logger.error(
-            f"❌ Telegram error: {error}"
-        )
-
+        logger.error(f"❌ Telegram error: {error}")
         return False
 
 
 # ============================================================
-# PROCESS NEWS
+# PROCESS NEWS (ڕێگریکردن لە دووبارەبوونەوە)
 # ============================================================
 
 async def process_news():
 
     seen = load_seen_news()
-
     news_list = get_news()
 
     if not news_list:
         return
 
-    new_news = []
-
-    for news in news_list:
-
-        if news["id"] not in seen:
-
-            new_news.append(news)
+    # تەنها ئەو هەواڵانە هەڵبژێرە کە پێشتر نەبینراون
+    new_news = [news for news in news_list if news["id"] not in seen]
 
     if not new_news:
-
-        logger.info(
-            "ℹ️ هیچ هەواڵێکی نوێ نییە."
-        )
-
+        logger.info("ℹ️ هیچ هەواڵێکی نوێ نییە.")
         return
 
-    logger.info(
-        f"🔥 {len(new_news)} هەواڵی نوێ دۆزرایەوە. دەستپێکردنی پۆستکردن..."
-    )
+    logger.info(f"🔥 {len(new_news)} هەواڵی نوێ دۆزرایەوە. پۆستکردن...")
 
     # کۆنترین -> نوێترین
     for news in reversed(new_news):
@@ -545,28 +398,15 @@ async def process_news():
         success = await send_news(news)
 
         if success:
-
-            seen.add(
-                news["id"]
-            )
-
-            save_seen_news(
-                seen
-            )
-
-            logger.info(
-                "💾 هەواڵەکە وەک پۆستکراو تۆمار کرا."
-            )
-
-            # چاوەڕوانکردنی ١٢٠ چرکە (٢ دەقە) بۆ هەواڵی داهاتوو
+            seen.add(news["id"])
+            save_seen_news(seen)
+            logger.info("💾 هەواڵەکە وەک پۆستکراو تۆمار کرا.")
+            
+            # چاوەڕوانکردنی ١٢٠ چرکە (٢ دەقە) لە نێوان هەر هەواڵێکدا
             await asyncio.sleep(120)
 
         else:
-
-            logger.warning(
-                "⚠️ هەواڵەکە نەنێردرا؛ "
-                "دواتر هەوڵی دووبارە دەدرێت."
-            )
+            logger.warning("⚠️ هەواڵەکە نەنێردرا؛ دواتر هەوڵ دەدرێت.")
             await asyncio.sleep(10)
 
 
@@ -575,23 +415,12 @@ async def process_news():
 # ============================================================
 
 async def test_telegram():
-
     try:
-
         me = await bot.get_me()
-
-        logger.info(
-            f"✅ Telegram Bot connected: @{me.username}"
-        )
-
+        logger.info(f"✅ Telegram Bot connected: @{me.username}")
         return True
-
     except Exception as error:
-
-        logger.error(
-            f"❌ Telegram connection failed: {error}"
-        )
-
+        logger.error(f"❌ Telegram connection failed: {error}")
         return False
 
 
@@ -600,65 +429,25 @@ async def test_telegram():
 # ============================================================
 
 async def main():
+    logger.info("================================================")
+    logger.info("🚀 HAMAD SPORT NEWS BOT STARTED")
+    logger.info("================================================")
+    logger.info(f"📢 Channel: {CHANNEL_USERNAME}")
+    logger.info(f"⏱️ Check: every {CHECK_INTERVAL} seconds")
 
-    logger.info(
-        "================================================"
-    )
-
-    logger.info(
-        "🚀 HAMAD SPORT NEWS BOT STARTED"
-    )
-
-    logger.info(
-        "================================================"
-    )
-
-    logger.info(
-        f"📢 Channel: {CHANNEL_USERNAME}"
-    )
-
-    logger.info(
-        f"🌐 RSS Sources Loaded"
-    )
-
-    logger.info(
-        f"⏱️ Check: every {CHECK_INTERVAL} seconds"
-    )
-
-
-    # Telegram test
     telegram_ok = await test_telegram()
-
     if not telegram_ok:
-
-        logger.error(
-            "🛑 Bot ناتوانێت بە Telegram پەیوەندی بکات."
-        )
-
+        logger.error("🛑 Bot ناتوانێت بە Telegram پەیوەندی بکات.")
         return
 
-
-    # Main loop
     while True:
-
         try:
-
             await process_news()
-
         except Exception as error:
+            logger.exception(f"❌ Unexpected error: {error}")
 
-            logger.exception(
-                f"❌ Unexpected error: {error}"
-            )
-
-
-        logger.info(
-            f"💤 چاوەڕوانی {CHECK_INTERVAL} چرکە..."
-        )
-
-        await asyncio.sleep(
-            CHECK_INTERVAL
-        )
+        logger.info(f"💤 چاوەڕوانی {CHECK_INTERVAL} چرکە...")
+        await asyncio.sleep(CHECK_INTERVAL)
 
 
 # ============================================================
@@ -666,18 +455,10 @@ async def main():
 # ============================================================
 
 def start_bot():
-
     try:
-
-        asyncio.run(
-            main()
-        )
-
+        asyncio.run(main())
     except Exception as error:
-
-        logger.exception(
-            f"❌ Bot stopped: {error}"
-        )
+        logger.exception(f"❌ Bot stopped: {error}")
 
 
 # ============================================================
@@ -685,15 +466,10 @@ def start_bot():
 # ============================================================
 
 if __name__ == "__main__":
-
-    # Flask لە thread ـێکی جیاواز
     web_thread = threading.Thread(
         target=run_web,
         daemon=True
     )
-
     web_thread.start()
 
-
-    # Telegram bot
     start_bot()
